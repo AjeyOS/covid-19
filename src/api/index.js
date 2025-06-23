@@ -1,57 +1,49 @@
-
 import axios from 'axios';
-const url ="https://covid19.mathdro.id/api";
 
+const url = "https://disease.sh/v3/covid-19";
 
 export const FetchData = async (country) => {
-let changeableUrl = url;
-if (country){
-    changeableUrl = `${url}/countries/${country}`
-}
-    try{
-        const {data:{confirmed, recovered, deaths, lastUpdate}} = await axios.get(changeableUrl);
+  let changeableUrl = `${url}/all`;
 
+  if (country) {
+    changeableUrl = `${url}/countries/${country}`;
+  }
 
-        return {confirmed, recovered, deaths, lastUpdate};
-    }catch(error){
-        console.log(error);
+  try {
+    const { data: { cases, recovered, deaths, updated } } = await axios.get(changeableUrl);
 
-    }
-    
-}
-    
-
+    return {
+      confirmed: { value: cases },
+      recovered: { value: recovered },
+      deaths: { value: deaths },
+      lastUpdate: updated,
+    };
+  } catch (error) {
+    console.log(error);
+  }
+};
 
 export const fetchDailyData = async () => {
+  try {
+    const { data } = await axios.get(`${url}/historical/all?lastdays=30`);
 
-    try{
-       const {data} = await axios.get(`${url}/daily`);
+    const modifiedData = Object.keys(data.cases).map((date) => ({
+      confirmed: data.cases[date],
+      deaths: data.deaths[date],
+      date,
+    }));
 
-       const modifieddata = data.map((mydata) => ({
-           confirmed : mydata.confirmed.total,
-           deaths : mydata.deaths.total,
-           date : mydata.reportDate
-       })) ;
-       
-       return modifieddata;
- 
-    }
-
-    catch (error){ 
-
-    }
-}
-
-
-
+    return modifiedData;
+  } catch (error) {
+    console.log(error);
+  }
+};
 
 export const fetchCountries = async () => {
-
-    try{
-
-        const {data : {countries}} = await axios.get(`${url}/countries`);
-        return countries.map((country) => country.name);
-    }catch(err){
-console.log(err);
-    }
-}
+  try {
+    const { data } = await axios.get(`${url}/countries`);
+    return data.map((country) => country.country);
+  } catch (err) {
+    console.log(err);
+  }
+};
